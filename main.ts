@@ -95,7 +95,7 @@ input.onButtonPressed(Button.B, function () {
     debug = 1
 })
 input.onLogoEvent(TouchButtonEvent.Pressed, function () {
-    basic.showString("L10")
+    basic.showString("L11")
     basic.pause(1000)
     basic.clearScreen()
     heading_T = 0
