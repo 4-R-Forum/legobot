@@ -105,7 +105,7 @@ input.onButtonPressed(Button.B, function () {
     debug = 1
 })
 input.onLogoEvent(TouchButtonEvent.Pressed, function () {
-    basic.showString("L11")
+    basic.showString("L12")
     basic.pause(1000)
     basic.clearScreen()
     heading_T = 0
@@ -141,4 +141,9 @@ input.onLogoEvent(TouchButtonEvent.Pressed, function () {
 })
 basic.forever(function () {
     calc_h_dev(input.compassHeading(), heading_T)
+    datalogger.log(
+    datalogger.createCV("compass", input.compassHeading()),
+    datalogger.createCV("target", heading_T),
+    datalogger.createCV("dev", heading_dev)
+    )
 })
