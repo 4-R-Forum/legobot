@@ -105,9 +105,10 @@ input.onButtonPressed(Button.B, function () {
     debug = 1
 })
 input.onLogoEvent(TouchButtonEvent.Pressed, function () {
-    basic.showString("L12")
+    basic.showString("L13")
     basic.pause(1000)
     basic.clearScreen()
+    datalogger.deleteLog(datalogger.DeleteType.Full)
     heading_T = 0
     heading_thold = 10
     if (debug == 1) {
