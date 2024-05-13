@@ -42,13 +42,23 @@ function TurnHeading (target: number) {
         }
         // within range
         if (heading_dev >= 0 - heading_thold && heading_dev <= heading_thold) {
-            basic.showLeds(`
-                . . . . .
-                . . . . .
-                . . # . .
-                . . . . .
-                . . . . .
-                `)
+            if (heading_dev >= 0 - 2 && heading_dev <= 2) {
+                basic.showLeds(`
+                    . . . . .
+                    . . . . .
+                    . . # . .
+                    . . . . .
+                    . . . . .
+                    `)
+            } else {
+                basic.showLeds(`
+                    . . . . .
+                    . . . . .
+                    . # # # .
+                    . . . . .
+                    . . . . .
+                    `)
+            }
             MotorDriver.MotorStop(Motor.A)
             MotorDriver.MotorStop(Motor.B)
             break;
@@ -130,5 +140,5 @@ input.onLogoEvent(TouchButtonEvent.Pressed, function () {
     basic.showIcon(IconNames.Yes)
 })
 basic.forever(function () {
-	
+    calc_h_dev(input.compassHeading(), heading_T)
 })
