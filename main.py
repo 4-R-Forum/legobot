@@ -42,13 +42,22 @@ def TurnHeading(target: number):
             MotorDriver.motor_run(Motor.B, Dir.FORWARD, 8)
         # within range
         if heading_dev >= 0 - heading_thold and heading_dev <= heading_thold:
-            basic.show_leds("""
-                . . . . .
-                . . . . .
-                . . # . .
-                . . . . .
-                . . . . .
-                """)
+            if heading_dev >= 0 - 2 and heading_dev <= 2:
+                basic.show_leds("""
+                    . . . . .
+                    . . . . .
+                    . . # . .
+                    . . . . .
+                    . . . . .
+                    """)
+            else:
+                basic.show_leds("""
+                    . . . . .
+                    . . . . .
+                    . # # # .
+                    . . . . .
+                    . . . . .
+                    """)
             MotorDriver.motor_stop(Motor.A)
             MotorDriver.motor_stop(Motor.B)
             break
@@ -92,9 +101,10 @@ input.on_button_pressed(Button.B, on_button_pressed_b)
 
 def on_logo_pressed():
     global heading_T, heading_thold
-    basic.show_string("L11")
+    basic.show_string("L13")
     basic.pause(1000)
     basic.clear_screen()
+    datalogger.delete_log(datalogger.DeleteType.FULL)
     heading_T = 0
     heading_thold = 10
     if debug == 1:
@@ -121,5 +131,8 @@ def on_logo_pressed():
 input.on_logo_event(TouchButtonEvent.PRESSED, on_logo_pressed)
 
 def on_forever():
-    pass
+    calc_h_dev(input.compass_heading(), heading_T)
+    datalogger.log(datalogger.create_cv("compass", input.compass_heading()),
+        datalogger.create_cv("target", heading_T),
+        datalogger.create_cv("dev", heading_dev))
 basic.forever(on_forever)

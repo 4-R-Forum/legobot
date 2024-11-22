@@ -90,8 +90,8 @@ function TurnHeadingtest () {
     }
 }
 function Forth () {
-    MotorDriver.MotorRun(Motor.A, Dir.forward, 10)
-    MotorDriver.MotorRun(Motor.B, Dir.forward, 10)
+    MotorDriver.MotorRun(Motor.A, Dir.backward, 10)
+    MotorDriver.MotorRun(Motor.B, Dir.backward, 10)
     basic.pause(2000)
     MotorDriver.MotorStop(Motor.A)
     MotorDriver.MotorStop(Motor.B)
