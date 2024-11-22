@@ -21,9 +21,13 @@
 ## CHECK- 
 
 - Ran bench test, OK
-- No field test, compass now working while motors run
 - Motor wires may need extending to mount color sensor on 2x2 column behind battery
 - Need to remove mbit for download
+- Wires marked for correct turn direction
+- Fwd Bck direction for motors fundamental for correct behavior
+- Field test with L14, successful
+- Wheels tend to separate from coupler
+    - Teflon tape on shaft helps secure
 
 ## ACT
 
