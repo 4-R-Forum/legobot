@@ -12,3 +12,5 @@ _site
 .simstate.json
 legobot.code-workspace
 PDCA/Pdf
+PDCA/*.txt
+
