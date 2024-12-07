@@ -1,20 +1,10 @@
-input.onButtonPressed(Button.AB, function () {
-    input.calibrateCompass()
-    n = 1
-    basic.showIcon(IconNames.Square)
-})
-function calc_h_dev2 (cur: number, tgt: number) {
-	
-}
-function stopMotors () {
-    MotorDriver.MotorStop(Motor.A)
-    MotorDriver.MotorStop(Motor.B)
-}
-function goFwd (speed: number, dist: number) {
-	
-}
+let debug = 0
+let heading_dev = 0
+let heading_T = 0
+let heading_thold = 0
+let go = 0
 input.onButtonPressed(Button.A, function () {
-	
+    debug = 0
 })
 function calc_h_dev (cur: number, tgt: number) {
     diff = tgt - cur
@@ -33,61 +23,80 @@ function calc_h_dev (cur: number, tgt: number) {
     }
 }
 function TurnHeading (target: number) {
-    if (true) {
-        // Dev +ve
-        // Turn Right, ClockWise
-        basic.showLeds(`
-            . . . . .
-            . . . . .
-            . . . . #
-            . . . . .
-            . . . . .
-            `)
-        // turn right
-        MotorDriver.MotorRun(Motor.A, Dir.forward, turnSpeed)
-        MotorDriver.MotorRun(Motor.B, Dir.backward, turnSpeed)
-        basic.pause(10 * Math.abs(heading_dev))
-        stopMotors()
-    }
-    if (heading_dev < 0 - heading_thold) {
-        // Dev -ve
-        // Turn Left, AntiClockwise
-        basic.showLeds(`
-            . . . . .
-            . . . . .
-            # . . . .
-            . . . . .
-            . . . . .
-            `)
-        // turn left
-        MotorDriver.MotorRun(Motor.A, Dir.backward, turnSpeed)
-        MotorDriver.MotorRun(Motor.B, Dir.forward, turnSpeed)
-        basic.pause(10 * Math.abs(heading_dev))
-        stopMotors()
-    }
-    // within range
-    if (heading_dev >= 0 - heading_thold && heading_dev <= heading_thold) {
-        if (heading_dev >= 0 - 2 && heading_dev <= 2) {
-            // Spot on, within 2 deg
+    while (true) {
+        calc_h_dev(input.compassHeading(), heading_T)
+        if (heading_dev < 0 - heading_thold) {
             basic.showLeds(`
                 . . . . .
                 . . . . .
-                . . # . .
+                . . . . #
                 . . . . .
                 . . . . .
                 `)
-        } else {
-            // Within threshold
+            // turn right
+            MotorDriver.MotorRun(Motor.A, Dir.forward, 8)
+            MotorDriver.MotorRun(Motor.B, Dir.backward, 8)
+        }
+        if (heading_dev > heading_thold) {
             basic.showLeds(`
                 . . . . .
                 . . . . .
-                . # # # .
+                # . . . .
                 . . . . .
                 . . . . .
                 `)
+            // turn left
+            MotorDriver.MotorRun(Motor.A, Dir.backward, 8)
+            MotorDriver.MotorRun(Motor.B, Dir.forward, 8)
+        }
+        // within range
+        if (heading_dev >= 0 - heading_thold && heading_dev <= heading_thold) {
+            if (heading_dev >= 0 - 2 && heading_dev <= 2) {
+                basic.showLeds(`
+                    . . . . .
+                    . . . . .
+                    . . # . .
+                    . . . . .
+                    . . . . .
+                    `)
+            } else {
+                basic.showLeds(`
+                    . . . . .
+                    . . . . .
+                    . # # # .
+                    . . . . .
+                    . . . . .
+                    `)
+            }
+            MotorDriver.MotorStop(Motor.A)
+            MotorDriver.MotorStop(Motor.B)
+            break;
         }
     }
-    stopMotors()
+}
+function TurnHeadingtest () {
+    while (heading_dev != 0) {
+        while (heading_dev < 0 - heading_thold || heading_dev > heading_thold) {
+            if (heading_dev < 0 - heading_thold) {
+                // turn right
+                MotorDriver.MotorRun(Motor.A, Dir.forward, 8)
+                MotorDriver.MotorRun(Motor.B, Dir.backward, 8)
+                go = 1
+                heading_dev += 1
+            }
+            if (heading_dev > heading_thold) {
+                // turn left
+                MotorDriver.MotorRun(Motor.A, Dir.backward, 8)
+                MotorDriver.MotorRun(Motor.B, Dir.forward, 8)
+                go = -1
+                heading_dev += -1
+            }
+        }
+        MotorDriver.MotorStop(Motor.A)
+        MotorDriver.MotorStop(Motor.B)
+        go = 0
+        break;
+    }
 }
 function Forth () {
     MotorDriver.MotorRun(Motor.A, Dir.backward, 10)
@@ -96,40 +105,50 @@ function Forth () {
     MotorDriver.MotorStop(Motor.A)
     MotorDriver.MotorStop(Motor.B)
 }
+input.onButtonPressed(Button.AB, function () {
+    basic.showIcon(IconNames.SmallDiamond)
+    input.calibrateCompass()
+    basic.showIcon(IconNames.Square)
+})
 input.onButtonPressed(Button.B, function () {
-    n += -1
+    debug = 1
 })
 input.onLogoEvent(TouchButtonEvent.Pressed, function () {
-    basic.showString("L15")
-    datalogger.deleteLog(datalogger.DeleteType.Fast)
-    turnSpeed = 4
+    basic.showString("L13")
+    basic.pause(1000)
+    basic.clearScreen()
+    datalogger.deleteLog(datalogger.DeleteType.Full)
     heading_T = 0
-    heading_thold = 5
-    while (true) {
-        compReading = input.compassHeading()
-        calc_h_dev(compReading, heading_T)
-        datalogger.log(
-        datalogger.createCV("compass", compReading),
-        datalogger.createCV("target", heading_T),
-        datalogger.createCV("dev", heading_dev),
-        datalogger.createCV("interval", n)
-        )
-        TurnHeading(heading_T)
-        if (heading_dev > heading_thold && heading_dev < 0 - heading_thold) {
-            break;
+    heading_thold = 10
+    if (debug == 1) {
+        basic.showNumber(input.compassHeading())
+        basic.showNumber(heading_T)
+        calc_h_dev(input.compassHeading(), heading_T)
+        basic.showNumber(heading_dev)
+    }
+    TurnHeading(0)
+    for (let index = 0; index < 4; index++) {
+        if (heading_T == 0) {
+            basic.showString("N")
         }
-        basic.pause(1000 * n)
+        if (heading_T == 90) {
+            basic.showString("E")
+        }
+        if (heading_T == 180) {
+            basic.showString("S")
+        }
+        if (heading_T == 270) {
+            basic.showString("W")
+        }
+        Forth()
+        heading_T += 90
+        if (heading_T == 360) {
+            heading_T = 0
+        }
+        TurnHeading(heading_T)
     }
     basic.showIcon(IconNames.Yes)
 })
-let compReading = 0
-let heading_T = 0
-let heading_thold = 0
-let turnSpeed = 0
-let heading_dev = 0
-let diff = 0
-let n = 0
-basic.showIcon(IconNames.SmallDiamond)
 basic.forever(function () {
 	
 })
