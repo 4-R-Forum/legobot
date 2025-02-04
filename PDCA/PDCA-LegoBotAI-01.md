@@ -1,7 +1,5 @@
 PDCA-LegobotAI-01
 
-
-
 # Purpose:
 
 Take advantage of ML to speed up and streamline change of heading when stopping motors in order to read compass.
@@ -32,6 +30,7 @@ Take advantage of ML to speed up and streamline change of heading when stopping 
     - log tick, angVel, tick, turnDeg
 
 ## DO
-
- Test Gyroscope alone first PDCA-:egoBotAI-01.1
+- Test Gyroscope alone first PDCA-:egoBotAI-01.1
+- Incorporate POC for field test 1.2
+ 
 
