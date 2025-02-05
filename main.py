@@ -1,100 +1,66 @@
-def on_button_pressed_ab():
-    global n
-    input.calibrate_compass()
-    n = 1
-    basic.show_icon(IconNames.SQUARE)
-input.on_button_pressed(Button.AB, on_button_pressed_ab)
 
-def calc_h_dev2(cur: number, tgt: number):
-    pass
-def stopMotors():
-    MotorDriver.motor_stop(Motor.A)
-    MotorDriver.motor_stop(Motor.B)
-def goFwd(speed: number, dist: number):
-    pass
-def calc_h_dev(cur2: number, tgt2: number):
-    global diff, heading_dev
-    diff = tgt2 - cur2
-    if diff > 0:
-        if diff > 180:
-            heading_dev = 180 - diff
-        else:
-            heading_dev = diff
-    else:
-        if diff < -180:
-            heading_dev = 360 + diff
-        else:
-            heading_dev = diff
-def TurnHeading(target: number):
-    if True:
-        # Dev +ve
-        # Turn Right, ClockWise
-        basic.show_leds("""
-            . . . . .
-            . . . . .
-            . . . . #
-            . . . . .
-            . . . . .
-            """)
-        # turn right
-        MotorDriver.motor_run(Motor.A, Dir.FORWARD, turnSpeed)
-        MotorDriver.motor_run(Motor.B, Dir.BACKWARD, turnSpeed)
-        basic.pause(10 * abs(heading_dev))
-        stopMotors()
-    if heading_dev < 0 - heading_thold:
-        # Dev -ve
-        # Turn Left, AntiClockwise
-        basic.show_leds("""
-            . . . . .
-            . . . . .
-            # . . . .
-            . . . . .
-            . . . . .
-            """)
-        # turn left
-        MotorDriver.motor_run(Motor.A, Dir.BACKWARD, turnSpeed)
-        MotorDriver.motor_run(Motor.B, Dir.FORWARD, turnSpeed)
-        basic.pause(10 * abs(heading_dev))
-        stopMotors()
-    # within range
-    if heading_dev >= 0 - heading_thold and heading_dev <= heading_thold:
-        if heading_dev >= 0 - 2 and heading_dev <= 2:
-            # Spot on, within 2 deg
-            basic.show_leds("""
-                . . . . .
-                . . . . .
-                . . # . .
-                . . . . .
-                . . . . .
-                """)
-        else:
-            # Within threshold
-            basic.show_leds("""
-                . . . . .
-                . . . . .
-                . # # # .
-                . . . . .
-                . . . . .
-                """)
-    stopMotors()
+from microbit import *
+import struct, log, time
 
-def on_button_pressed_a():
-    pass
-input.on_button_pressed(Button.A, on_button_pressed_a)
+MPU6050_ADDR = 0x68
 
-def Forth():
-    MotorDriver.motor_run(Motor.A, Dir.BACKWARD, 10)
-    MotorDriver.motor_run(Motor.B, Dir.BACKWARD, 10)
-    basic.pause(2000)
-    MotorDriver.motor_stop(Motor.A)
-    MotorDriver.motor_stop(Motor.B)
+# Initialize MPU-6050
+def init_mpu6050():
+    i2c.write(MPU6050_ADDR, bytearray([0x6B, 0]))  # Wake up MPU-6050
 
-def on_button_pressed_b():
-    global n
-    n += -1
-input.on_button_pressed(Button.B, on_button_pressed_b)
+# Global Setup
+init_mpu6050()
+log.set_labels('yaw')
 
-def on_logo_pressed():
+
+# Parameters for single test
+HeadingChange = 90 # degrees
+StopReadDelay = 100 # ms
+MotorPower = 4 # 40%
+# from L15 test turn with motor power 4 is 4 deg per second = 250 ms per degree
+# so expected duratiopn in this test = 90 * 250 = 22500 ms
+ExpectedDuration = 22500
+sample_rate = 100 # 0.1 sec
+
+
+def log_yaw(sample_rate):
+    # Read 16-bit raw data from a register
+    def read_mpu6050(register):
+        i2c.write(MPU6050_ADDR, bytearray([register]))  
+        data = i2c.read(MPU6050_ADDR, 2)  
+        return struct.unpack(">h", data)[0]  
+
+    # Get yaw velocity (°/s)
+    def get_yaw_velocity():
+        return read_mpu6050(0x47) / 131.0  # Convert raw data to °/s
+
+
+    # Variables for integration
+    yaw_angle = 0.0  # Initial heading
+    start_time = time.ticks_ms()   # Get initial time in milliseconds
+    last_time = start_time
+
+    while (time.ticks_diff(time.ticks_ms(), start_time) < ExpectedDuration) :
+        # Read yaw rate
+        yaw_rate = get_yaw_velocity()
+        
+        # Get current time and compute time difference (dt in seconds)
+        
+        # Integrate yaw rate to update heading
+        this_time = time.ticks_ms()
+        yaw_angle += yaw_rate * (this_time  - last_time) / 1000
+
+        # Normalize to ±180° format
+        yaw_angle = (yaw_angle + 180) % 360 - 180  
+
+        # Log heading change
+        print("Yaw (°):", yaw_angle)
+        log.add({
+        'yaw': yaw_angle
+        })
+        sleep(sample_rate)  # Adjust sample rate
+
+def test_turn ():
     global turnSpeed, heading_T, heading_thold, compReading
     basic.show_string("L15")
     datalogger.delete_log(datalogger.DeleteType.FAST)
@@ -112,18 +78,7 @@ def on_logo_pressed():
         if heading_dev > heading_thold and heading_dev < 0 - heading_thold:
             break
         basic.pause(1000 * n)
-    basic.show_icon(IconNames.YES)
-input.on_logo_event(TouchButtonEvent.PRESSED, on_logo_pressed)
+    basic.show_icon(IconNames.YES)    
 
-compReading = 0
-heading_T = 0
-heading_thold = 0
-turnSpeed = 0
-heading_dev = 0
-diff = 0
-n = 0
-basic.show_icon(IconNames.SMALL_DIAMOND)
 
-def on_forever():
-    pass
-basic.forever(on_forever)
+log_yaw(100)
