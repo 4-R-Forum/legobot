@@ -1,6 +1,6 @@
-
 from microbit import *
 import struct, log, time
+import sbcmotorcontroller
 
 MPU6050_ADDR = 0x68
 def init_mpu6050():
@@ -19,6 +19,11 @@ def get_yaw_velocity():
 # Global Setup
 init_mpu6050()
 log.set_labels('ang_vel','acc_yaw')
+# Issues sharing enums/Class between modules, use int
+MotorA = 1
+MotorB = 2
+DirFWD = 1
+DirBCK = 2
 
 # Parameters for single test
 HeadingChange = 90 # degrees
@@ -28,36 +33,6 @@ MotorPower = 4 # 40%
 # so expected duratiopn in this test = 90 * 250 = 22500 ms
 # ExpectedDuration = 22500
 sample_rate = 100 # 0.1 sec
-
-def log_yaw():
-    ### created for POC in PDCA-01.1
-    ### unit test candidate ///TODO params for values to log
-    # Read 16-bit raw data from a register
-    def read_mpu6050(register):
-        i2c.write(MPU6050_ADDR, bytearray([register]))  
-        data = i2c.read(MPU6050_ADDR, 2)  
-        return struct.unpack(">h", data)[0]  
-    # Get yaw velocity (°/s)
-    def get_yaw_velocity():
-        return read_mpu6050(0x47) / 131.0  # Convert raw data to °/s
-    # Variables for integration
-    yaw_angle = 0.0  # Initial heading
-    start_time = time.ticks_ms()   # Get initial time in milliseconds
-    last_time = start_time
-    while (time.ticks_diff(time.ticks_ms(), start_time) < ExpectedDuration) :
-        # Read yaw rate
-        yaw_rate = get_yaw_velocity()      
-        # Integrate yaw rate to update heading
-        this_time = time.ticks_ms()
-        yaw_angle += yaw_rate * (this_time  - last_time) / 1000
-        # Normalize to ±180° format
-        yaw_angle = (yaw_angle + 180) % 360 - 180  
-        # Log heading change
-        print("Yaw (°):", yaw_angle)
-        log.add({
-        'yaw': yaw_angle
-        })
-        sleep(sample_rate)  # Adjust sample rate
 
 def test_turn():
     log.delete()
@@ -84,9 +59,44 @@ def test_turn():
         'acc_yaw': yaw_angle
         })
         sleep(sample_rate)  # Adjust sample rate
-        
+
+def turn_heading_test():
+    HeadingDev = 0 - HeadingChange
+    yaw_angle = 0
+    start_time = time.ticks_ms()   # Get initial time in milliseconds
+    last_time = start_time
+    Adir = 0
+    while HeadingDev != 0:
+        if HeadingDev < 0:
+            # turn right
+            Adir = DirFWD
+            Bdir = DirBCK
+        else:
+            # turn left
+            Adir = DirBCK
+            Bdir = DirFWD
+        sbcmotorcontroller.motor_run(MotorA, Adir, MotorPower)
+        sbcmotorcontroller.motor_run(MotorB, Bdir, MotorPower)
+        # Read yaw rate
+        ang_vel = get_yaw_velocity()      
+        # Integrate yaw rate to update heading
+        this_time = time.ticks_ms()
+        yaw_angle += ang_vel * (this_time  - last_time) / 1000
+        # Normalize to ±180° format
+        yaw_angle = (yaw_angle + 180) % 360 - 180
+        HeadingDev = 0 - yaw_angle
+        # Log heading change
+        print("AngVel (°/s)", ang_vel, ", Yaw (°):",yaw_angle)
+        log.add({
+        'ang_vel': ang_vel,
+        'acc_yaw': yaw_angle
+        })
+     
+    sbcmotorcontroller.motor_stop(MotorA)
+    sbcmotorcontroller.motor_stop(MotorB)
+ 
 # main code #
-display.show("G1.2")
+display.show("G1.3")
 display.clear()
-test_turn()
+turn_heading_test()
 display.show(Image.YES)
