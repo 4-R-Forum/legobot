@@ -91,12 +91,13 @@ def turn_heading_test():
         'ang_vel': ang_vel,
         'acc_yaw': yaw_angle
         })
+        sleep(sample_rate)  # Adjust sample rate
      
     sbcmotorcontroller.motor_stop(MotorA)
     sbcmotorcontroller.motor_stop(MotorB)
  
 # main code #
-display.show("G1.3")
+display.show("G1.3.1")
 display.clear()
 turn_heading_test()
 display.show(Image.YES)
