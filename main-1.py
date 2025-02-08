@@ -1,8 +1,52 @@
 from microbit import *
 import struct, log, time
-import sbcmotorcontroller
+# import sbcmotorcontroller
+
+## SBC Motor Controller
+# Define motor and servo pins
+PWMA   = pin8  # Analog Motor A
+AIN1   = pin13 # Digital
+AIN2   = pin12 # Digital
+PWMB   = pin16 # Analog Motor B
+BIN1   = pin14 # Digital
+BIN2   = pin15 # Digital
+S0_PIN = pin0  # Analog Servo1
+S1_PIN = pin1  # Analog Servo2
+S2_PIN = pin2  # Analog Servo3
+
+def motor_run(motor: int, direction: int, speed: int):
+    duty = min(max(speed * 64 - 1, 0), 1023)  # Map 0-16 to 0-1023
+    global AIN1, AIN2, BIN1, BIN2, PWMA, PWMB
+    if motor == 1:
+        #Pins.analogWritePin(PWMA, duty)
+        PWMA.write_analog(duty)
+        PWMA.set_analog_period(1)
+        if direction == 1:
+            AIN1.write_digital(0)
+            AIN2.write_digital(1)
+        else:
+            AIN1.write_digital(1)
+            AIN2.write_digital(0)
+    else:
+        PWMB.write_analog(duty)
+        PWMB.set_analog_period(1)
+        if direction == 1:
+            BIN1.write_digital(0)
+            BIN2.write_digital(1)
+        else:
+            BIN1.write_digital(1)
+            BIN2.write_digital(0)
+
+def motor_stop(motor:int):
+    if motor == 1:
+        PWMA.write_analog(0)
+    else:
+        PWMB.write_analog(0)
+
+## end of SBC MotorController
 
 MPU6050_ADDR = 0x68
+    
 def init_mpu6050():
     # Function to initialize MPU-6050
     global MPU6050_ADDR
@@ -40,7 +84,9 @@ def turn_heading_test():
     start_time = time.ticks_ms()   # Get initial time in milliseconds
     last_time = start_time
     Adir = 0
+    
     while HeadingDev != 0:
+        
         if HeadingDev < 0:
             # turn right
             Adir = DirFWD
@@ -49,8 +95,8 @@ def turn_heading_test():
             # turn left
             Adir = DirBCK
             Bdir = DirFWD
-        sbcmotorcontroller.motor_run(MotorA, Adir, MotorPower)
-        sbcmotorcontroller.motor_run(MotorB, Bdir, MotorPower)
+        motor_run(MotorA, Adir, MotorPower)
+        motor_run(MotorB, Bdir, MotorPower)
         # Read yaw rate
         ang_vel = get_yaw_velocity()      
         # Integrate yaw rate to update heading
@@ -67,11 +113,11 @@ def turn_heading_test():
         })
         sleep(sample_rate)  # Adjust sample rate
      
-    sbcmotorcontroller.motor_stop(MotorA)
-    sbcmotorcontroller.motor_stop(MotorB)
+    motor_stop(MotorA)
+    motor_stop(MotorB)
  
 # main code #
-display.show("G1.3.4")
+display.show("G1.3.2")
 display.clear()
 log.delete()
 turn_heading_test()
