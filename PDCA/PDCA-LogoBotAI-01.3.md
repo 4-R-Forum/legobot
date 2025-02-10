@@ -2,7 +2,7 @@ PDCA-LegoBotAI-1.3
 
 # Purpose
 
-Field test makding a turn with motors, and log drift over several turns
+Field test making a turn with motors, and log drift over several turns
 
 ## PLAN
 - Mount 6050 on LegoBot
@@ -59,4 +59,4 @@ Field test makding a turn with motors, and log drift over several turns
 - Now we have a motor driver. Great.
 - Log shows same pattern as others acc never decreases, does angVel have sign?
 - Investigate and fix for successful field test
-- Process using MicroPython editor and VSCode still prone to fubles. Improve and document
+- Process using MicroPython editor and VSCode still prone to fumbles. Improve and document
