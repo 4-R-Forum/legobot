@@ -1,7 +1,7 @@
 from microbit import *
 import log, time, gc
 import sbcmotorcontroller
-pdca = "G1.5.1"
+pdca = "G1.5.2"
 
 MPU6050_ADDR = 0x68
 def init_mpu6050():
@@ -12,11 +12,14 @@ def read_mpu6050(register):
         # function to  Read 16-bit raw data from 6050 register
         i2c.write(MPU6050_ADDR, bytearray([register]))  
         raw = i2c.read(MPU6050_ADDR, 2)   # read 2 bytes
+        '''        
         value = (raw[0] << 8) | raw[1]  # Combine High Byte and Low Byte
         # Convert to signed 16-bit integer
         if value > 32767:
             value -= 65536 
         return value
+        '''
+        return raw
 def get_yaw_velocity():
     #Function to get yaw velocity (°/s)
     return read_mpu6050(0x47) / 131.0  # Convert raw data to °/s 
@@ -39,7 +42,7 @@ def turn_complete(change, dev):
 
 # Global Setup
 init_mpu6050()
-log.set_labels('ang_vel','acc_yaw','dev')
+log.set_labels('ang_vel','acc_yaw','dev','raw','value','signed_value')
 # Issues sharing enums/Class between modules, use int
 MotorA = 1
 MotorB = 2
@@ -54,7 +57,10 @@ def turn_heading_test(HeadingChange, MotorPower, sample_rate):
     log.add({
     'ang_vel': 0,
     'acc_yaw': 0,
-    'dev': HeadingChange
+    'dev': HeadingChange,
+    'raw': "",
+    'value': "",
+    'signed_value': ""
     })
     while True:
         # start fwd motor first, avoid turn wrong way
@@ -72,7 +78,14 @@ def turn_heading_test(HeadingChange, MotorPower, sample_rate):
             sbcmotorcontroller.motor_run(MotorA, Adir, MotorPower)
        
         # Read yaw rate
-        ang_vel = get_yaw_velocity()      
+        # ang_vel = get_yaw_velocity() 
+        raw =  read_mpu6050(0x47)
+        value = (raw[0] << 8) | raw[1]  # Combine High Byte and Low Byte
+        signed_value = value
+        # Convert to signed 16-bit integer
+        if value > 32767:
+            signed_value = value - 65536
+        ang_vel = signed_value / 131.0  # Convert raw data to °/s 
         # Integrate yaw rate to update heading
         this_time = time.ticks_ms()
         yaw_angle += ang_vel * (this_time  - last_time) / 1000 # dt +ve
@@ -84,14 +97,12 @@ def turn_heading_test(HeadingChange, MotorPower, sample_rate):
         log.add({
         'ang_vel': ang_vel,
         'acc_yaw': yaw_angle,
-        'dev': HeadingDev
+        'dev': HeadingDev,
+        'raw': raw,
+        'value': value,
+        'signed_value': signed_value
         })
         if turn_complete(HeadingChange,HeadingDev): # /// TODO Test
-            log.add({
-            'ang_vel': ang_vel,
-            'acc_yaw': yaw_angle,
-            'dev': HeadingDev
-            })
             break
         sleep(sample_rate)  # Adjust sample rate
 

@@ -20,6 +20,10 @@ PDCA-LegoBotAI-1.5
 - generalize changes
 - add parameters to turn_heading_test
 - mutiple tests in unit test module
+1.5.2
+- log raw, value
+- bench test
+
 
 ## CHECK
   
@@ -32,7 +36,19 @@ PDCA-LegoBotAI-1.5
 
 1.5.1
 - 4 tests mostly successful
-- no -ve ang_acc
-- +ve Heading change approx correct, -ve about half way
-- bot turns wrong way on all turns
+- no -ve ang_acc. Why1?
+- +ve Heading change approx correct
+- -ve about half way. Why2?
+- bot turns wrong way on all turns. Why3?
 - see log 1.5.3 and video
+
+1.5.2
+- 
+- it looks like gyro is returning ang_vel of +2 +- 0.1 deg/sec regardless of actual, see _Gus2B\1-Projects\LegoBot\microbit (19).csv"
+- even when not rotating, see 1.5.2.1.xlsx using LegobotAI-Gyro-01.py
+- this explains Why1, ang_vel is always +ve
+- and Why2, bot does not know actual ang_vel
+
+## ACT
+- Check microbit voltage on bot and 6050, 3.3 or 5?
+- Breadboard test of microbit with only MPU6050

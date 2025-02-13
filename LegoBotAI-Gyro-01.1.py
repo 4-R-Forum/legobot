@@ -10,7 +10,7 @@ def init_mpu6050():
     i2c.write(MPU6050_ADDR, bytearray([0x6B, 0]))  # Wake up MPU-6050
 
 # Setup log columns
-log.set_labels('yaw')
+log.set_labels('yaw','yaw_rate')
 
 # Read 16-bit raw data from a register
 def read_mpu6050(register):
@@ -45,9 +45,11 @@ while True:
     yaw_angle = (yaw_angle + 180) % 360 - 180  
 
     # Log heading change
-    print("Yaw (°):", yaw_angle)
+    #print("Yaw (°):", yaw_angle)
     log.add({
-      'yaw': yaw_angle
+      'yaw': ,
+      'yaw_rate0':yaw_rate
+
     })
     
     
