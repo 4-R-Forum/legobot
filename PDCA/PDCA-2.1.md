@@ -1,4 +1,4 @@
-.y# PDCA-LegoBot-2.1
+# PDCA-LegoBot-2.1
 
 ## Goal
 

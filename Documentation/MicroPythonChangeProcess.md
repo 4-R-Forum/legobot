@@ -6,12 +6,16 @@ VS Code does have GitHub integration and a choice of micro:bit extension but I h
 
 I have been using both with copy and paste, and found the hard way that it is easy to make a fumble and lose work. This process is intended to minimize risk of a fumble with the benefits of both tools.
 
-1. Write code in VSCode and commit to GitHub.
-1. In micro:bit MicroPyton editorProject, open main.py from git repo
-1. For any modules in the rpo, create a file and copy and paste code. (I don't see another way to do this with source code, you could keep .hex files in git but that is not what git is for.)
-1. Resolve any sytax errors in MicroPython
-1. Run code in the simulator, resolve any runtime errors.
-1. Set browser download loction to repo, avoids cut and past fumbles.
-1. Use MicroPython Project at left to save files individually
-    -problem, prenames, won't overwrite!
-1. Load 
+## For each PDCA iteration
+1. Open microbit Python editor at https://python.microbit.org/v/3
+1. Name the project for the PDCA, this will be used as filename for saving .hex and .py files
+1. Open main.py from the repo in the editor, this prompts and overwrites code in the editor
+1. Create a new python file for other modules, copy and paste code from the repo. (no other way to do this found). Hopefully such modules are fairly stable.
+1. Test code in simulator, to reveal any runtime 
+1. Download code to microbit using USB cable
+1. Run the code for bench or field test
+1. If any lot is all numeric, download and review in preview, save as png with snipping tool
+    1. Else download open and save in Excel
+1. Save code as hex (contains main and modules) to downloads folder. This is a safety backup in case needed
+1. Update PDCA in repo
+1. Commit changes in git
