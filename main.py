@@ -1,7 +1,7 @@
 from microbit import *
 import log, time, gc
 import sbcmotorcontroller
-pdca = "G1.7.2"
+pdca = "G1.7.3"
 
 
 def init_mpu6050():
@@ -25,21 +25,17 @@ def get_yaw_velocity(bias,alpha,last_value):
     ang_vel = filtered_value / 131.0  # convert signed value to °/s 
     return ang_vel 
 def dev_update(change, yaw):
-    '''
-    if change > 0:
-        return change -yaw
-    else:
-        return change + yaw
-    '''
-    return yaw - change
+    # CCW = +ve counter-intuitive
+    return change - yaw
 def turn_complete(change, dev):
+    # CCW = +ve counter-intuitive
     if change > 0:
-        if dev >= 0:
+        if dev <= 0:
             return True
         else:
             return False
     elif change < 0:
-        if dev <= 0:
+        if dev >= 0:
             return True
         else:
             return False
@@ -66,17 +62,18 @@ def turn_heading_test(HeadingChange, MotorPower, sample_rate):
     'dev': HeadingDev
     })
     while True:
-        # Set motor directions, start fwd motor first, avoid turn wrong way
+        # Set motor directions, start fwd motor first
+        # CCW = +ve counter-intuitive
         if HeadingDev > 0:
-            # turn left, CCW, angvel +ve
-            Adir = DirBCK
-            Bdir = DirFWD
-            sbcmotorcontroller.motor_run(MotorA, Adir, MotorPower)
-            sbcmotorcontroller.motor_run(MotorB, Bdir, MotorPower)
-        else:
             # turn right, CW, angvel -ve
             Adir = DirFWD
             Bdir = DirBCK
+            sbcmotorcontroller.motor_run(MotorA, Adir, MotorPower)
+            sbcmotorcontroller.motor_run(MotorB, Bdir, MotorPower)
+        else:
+            # turn left, CCW, angvel +ve
+            Adir = DirBCK
+            Bdir = DirFWD
             sbcmotorcontroller.motor_run(MotorB, Bdir, MotorPower)
             sbcmotorcontroller.motor_run(MotorA, Adir, MotorPower)
        
