@@ -1,7 +1,7 @@
 from microbit import *
 import log, time, gc
 import sbcmotorcontroller
-pdca = "G1.7.3"
+pdca = "G1.7.5"
 
 
 def init_mpu6050():
@@ -45,6 +45,13 @@ def log_break():
         'acc_yaw': 0,
         'dev': 0
         })
+def log_compass():
+    sleep(200)
+    heading_cw = compass.heading()
+    heading_ccw = (-heading_cw + 180) % 360 - 180
+    log.add({'heading_ccw':heading_ccw})
+
+
 
 def turn_heading_test(HeadingChange, MotorPower, sample_rate):
     log_break()
@@ -107,9 +114,13 @@ def turn_heading_test(HeadingChange, MotorPower, sample_rate):
 # Global Setup
 # wait until logo pressed
 display.show(pdca)
-display.clear()
+display.show("C")
 while not pin_logo.is_touched():
-    sleep(100) 
+    sleep(100)
+compass.calibrate()
+display.show("R") 
+while not pin_logo.is_touched():
+    sleep(100)
 MPU6050_ADDR = 0x68
 gz_bias = 242
 init_mpu6050()
@@ -124,13 +135,18 @@ DirFWD = 1
 DirBCK = 2
 # reset log
 log.delete()
-log.set_labels('ang_vel','acc_yaw','dev')
+log.set_labels('ang_vel','acc_yaw','dev', 'heading_ccw')
 # main code #
+log_compass()
 turn_heading_test(30, 3, 80)
-sleep(1000)
+log_compass()
+sleep(500)
 turn_heading_test(60, 3, 80)
-sleep(1000)
+log_compass()
+sleep(500)
 turn_heading_test(-30, 3, 80)
-sleep(1000)
+log_compass()
+sleep(500)
 turn_heading_test(-60, 3, 80)
+log_compass()
 display.show(Image.YES)
