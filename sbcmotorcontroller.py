@@ -11,6 +11,11 @@ BIN2   = pin15 # Digital
 S0_PIN = pin0  # Analog Servo1
 S1_PIN = pin1  # Analog Servo2
 S2_PIN = pin2  # Analog Servo3
+# Issues sharing enums/Class between modules, use int
+MotorA = 1
+MotorB = 2
+DirFWD = 1
+DirBCK = 2
 
 def motor_run(motor: int, direction: int, speed: int):
     duty = min(max(speed * 64 - 1, 0), 1023)  # Map 0-16 to 0-1023
