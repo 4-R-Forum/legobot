@@ -34,7 +34,7 @@ Steps to avoid git merge errors between MakeCode and VSCode
 
 ## CHECK
 
-- see microbit2 thru 10 charts
+- see microbit2 thru 10 charts in "C:\Users\ghodg\OneDrive\_Gus2B\1-Projects\LegoBot\microbit (2).xlsx"
 - test git steps
 
 ## ACT
