@@ -25,5 +25,9 @@
     "files.exclude": {
         "**/pxt_modules": true,
         "**/.pxt": true
+    },
+    "python.linting": {
+        "python.linting.pylintArgs": ["--disable=all"]
+
     }
 }
