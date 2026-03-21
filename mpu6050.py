@@ -5,6 +5,47 @@ import sbcmotorcontroller
 MPU6050_ADDR = 0x68
 gz_bias = 0
 
+def normalize_deg_pm180(deg):
+    # Normalize to [-180, 180)
+    return (deg + 180) % 360 - 180
+
+def compass_heading_ccw_pm180():
+    heading_cw = compass.heading()
+    return normalize_deg_pm180(-heading_cw)
+
+def log_compass(duration_s=5.0):
+    """
+    Log compass heading at start and every 1/10th of duration (11 samples total).
+    Logs `heading_ccw` and `comp_ms` (elapsed milliseconds since start).
+    """
+    try:
+        duration_s = float(duration_s)
+    except:
+        duration_s = 5.0
+    if duration_s < 0:
+        duration_s = 0.0
+
+    step_ms = int((duration_s * 1000.0) / 10.0)
+    if step_ms < 0:
+        step_ms = 0
+
+    start_ms = time.ticks_ms()
+    for i in range(11):
+        now_ms = time.ticks_ms()
+        elapsed_ms = time.ticks_diff(now_ms, start_ms)
+        log.add({
+            'heading_ccw': compass_heading_ccw_pm180(),
+            'comp_ms': elapsed_ms
+        })
+
+        if i >= 10:
+            break
+
+        target_next_ms = (i + 1) * step_ms
+        sleep_ms = target_next_ms - elapsed_ms
+        if sleep_ms > 0:
+            sleep(sleep_ms)
+
 def init_mpu6050():
     # Function to initialize MPU-6050
     i2c.init()
@@ -146,4 +187,65 @@ def turn(HeadingChange, MotorPower):
 
     sbcmotorcontroller.motor_stop(sbcmotorcontroller.MotorA)
     sbcmotorcontroller.motor_stop(sbcmotorcontroller.MotorB)
-    
+
+def move(heading, dist, MotorPower=6, cm_per_sec=20.0, Kp=0.02):
+    """
+    Drive forward for `dist` cm while holding absolute compass heading (CCW-positive, ±180).
+    Distance is time-based: duration_s = dist / cm_per_sec (calibrate cm_per_sec for your bot/power).
+    """
+    if cm_per_sec <= 0:
+        return
+
+    target_heading = normalize_deg_pm180(heading)
+
+    # Motor power constraints (sbcmotorcontroller maps 0..16)
+    MAX_POWER = 16
+    MIN_POWER = 2  # helps avoid stall at low duty
+    base_power = max(MIN_POWER, min(MAX_POWER, int(MotorPower)))
+
+    duration_ms = int((float(dist) / float(cm_per_sec)) * 1000)
+    if duration_ms <= 0:
+        return
+
+    Adir = sbcmotorcontroller.DirFWD
+    Bdir = sbcmotorcontroller.DirFWD
+
+    start_ms = time.ticks_ms()
+    sample_rate = 50
+
+    while True:
+        now_ms = time.ticks_ms()
+        elapsed_ms = time.ticks_diff(now_ms, start_ms)
+        if elapsed_ms >= duration_ms:
+            break
+
+        current_heading = compass_heading_ccw_pm180()
+        error = normalize_deg_pm180(target_heading - current_heading)
+
+        # Positive error => need CCW correction => slow left / speed right
+        bias = int(Kp * error)
+        power_a = max(0, min(MAX_POWER, base_power + bias))  # MotorA (Right)
+        power_b = max(0, min(MAX_POWER, base_power - bias))  # MotorB (Left)
+
+        # Keep both motors above stall if we are trying to move
+        if power_a != 0:
+            power_a = max(MIN_POWER, power_a)
+        if power_b != 0:
+            power_b = max(MIN_POWER, power_b)
+
+        sbcmotorcontroller.motor_run(sbcmotorcontroller.MotorA, Adir, power_a)
+        sbcmotorcontroller.motor_run(sbcmotorcontroller.MotorB, Bdir, power_b)
+
+        log.add({
+            't_heading': target_heading,
+            'heading_ccw': current_heading,
+            'h_err': error,
+            'pA': power_a,
+            'pB': power_b,
+            'ms': elapsed_ms
+        })
+
+        sleep(sample_rate)
+
+    sbcmotorcontroller.motor_stop(sbcmotorcontroller.MotorA)
+    sbcmotorcontroller.motor_stop(sbcmotorcontroller.MotorB)
